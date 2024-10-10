@@ -1,0 +1,210 @@
+---
+title: "index"
+author: 
+  - Yundi Hou
+  - Yuxiang Su
+format: html
+editor: visual
+---
+
+## Data Cleaning
+
+Before visualize the data, we have to combine the datasets of each year and then drop the unnecessary variables.
+
+```{r}
+
+library(readxl)
+library(tidyverse)
+library(ggplot2)
+library(sf)
+library(tigris)
+library(gridExtra)
+
+
+# Load in the data
+df_2020 <- read_excel("SDOH_2020_COUNTY_1_0.xlsx", sheet = 2)
+
+# Drop the unnecessary variables
+df_2020 <- df_2020 |>
+  rename(county_fips = COUNTYFIPS,
+         state_fips = STATEFIPS,
+         urindex = AHRF_USDA_RUCC_2013, 
+         inc = ACS_MEDIAN_HH_INC, 
+         uer = AHRF_UNEMPLOYED_RATE, 
+         age = ACS_MEDIAN_AGE
+         ) |>
+  select(county_fips, state_fips, urindex, inc, uer, age)
+
+```
+
+## Geographic Distribution of Median Income by County in 2009 and 2020
+
+```{r}
+
+# Get the county shape data
+counties <- counties(cb = TRUE, resolution = "20m")
+
+# Merge the county shapefile data with df_2020 using FIPS code
+df_2020_sf <- counties |>
+  left_join(df_2020, by = c("GEOID" = "county_fips"))
+
+df_2020_sf <- st_transform(df_2020_sf, 4326)
+
+# Create a map of median income by county in 2020
+map_inc <-
+  ggplot(data = df_2020_sf) +
+  geom_sf(
+    aes(fill = inc), 
+    color = "white",
+    size = 0.1) + 
+  scale_fill_gradient(
+    low = "azure2", 
+    high = "dodgerblue4", 
+    name = "Median Income", 
+    na.value = "white") +
+  labs(title = "Median Household Income by County in the U.S. (2020)",
+       subtitle = "Median household income (dollars, inflation-adjusted to data file year)",
+       caption = "Source: Social Determinants of Health Database") + 
+  theme_minimal() +  
+  theme(
+    axis.text = element_blank(), 
+    axis.ticks = element_blank(),  
+    panel.grid = element_blank(),  
+    plot.title = element_text(hjust = 0.5, face = "bold"), 
+    plot.subtitle = element_text(hjust = 0.5, face = "italic")) +
+  coord_sf(xlim = c(-125, -66), ylim = c(24, 50)) 
+
+# Print the maps
+map_inc
+
+
+```
+This graph illustrates the income levels across various counties in the United States. The color intensity in each county represents the level of the median household income (inflation adjusted): the thicker the blue is, the higher the income is. 
+The picture reveals income disparities across different regions in the United States. Coastal counties generally being wealthier than those inland. The richest areas are found along the northeastern and southwestern coasts, while the southeastern region appears to be the poorest. Additionally, compared with the eastern part of U.S., the western part has larger counties, and the distribution of household income seems more uniform compared to the eastern region.
+
+
+## Income Disparities over Regions (Urben v.s. Rural)
+
+```{r}
+
+# Generate mean income by urindex
+df_2020_ur <- df_2020 |>
+  filter(!is.na(urindex), !is.na(inc))
+
+# Create a new classification with 3 classes (Urban, Suburban, Rural)
+df_2020_ur <- df_2020_ur |>
+  mutate(ur_class = case_when(
+    urindex %in% 1:3 ~ "Urban",
+    urindex %in% 4:6 ~ "Suburban",
+    urindex %in% 7:9 ~ "Rural"
+  ))
+
+# Calculate mean income by ur_class
+df_2020_ur <- df_2020_ur |>
+  group_by(ur_class) |>
+  summarize(mean_inc = mean(inc))
+
+# Create the bar chart
+bar_inc_ur <- 
+  ggplot(data = df_2020_ur, aes(x = ur_class, y = mean_inc)) +
+  geom_col(fill = "dodgerblue", width = 0.5) +
+  labs(
+    title = "Median Household Income by Urban-Rural Classification",
+    x = "Urban-Rural Classification",
+    y = "Mean Median Household Income (USD)",
+    caption = "Source: Social Determinants of Health Database"
+  ) +
+  scale_y_continuous(
+    limits = c(0, max(df_2020_ur$mean_inc) + 20000), 
+    expand = c(0, 0)
+    ) +
+  theme_minimal() +  
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"), 
+    axis.line = element_line(color = "black"), 
+    axis.ticks = element_line(color = "black")
+  )
+
+# Print the bar chart
+bar_inc_ur
+```
+This graph shows household income levels across counties categorized by different levels of urbanization. Using the Urban-Rural Commuting Area code, we divided all U.S. counties into three categories: Urban, Suburban, and Rural. The height of each bar represents the average county median household income for each category.
+The graph indicates that urbanization significantly affects household income. The average county-level median household income for "Urban" counties is 60,000, which is notably higher than the 50,000 average for "Rural" counties. However, there is no significant difference between the average incomes of "Suburban" and "Rural" counties.
+
+
+## Income Diesparities over Races
+
+```{r}
+
+
+```
+
+## Relationship Between Income and Unemployment Rate
+
+```{r}
+
+ggplot(data = df_2020) + 
+  geom_point(
+    aes(x = uer, y = inc), 
+    alpha = 0.5, 
+    size = 0.5, 
+    color = "dodgerblue4") +
+  geom_smooth(
+    aes(x= uer, y = inc),
+    method = "lm",
+    alpha = 0.8,
+    color = "violet"
+  ) +
+  labs(title = "Scatter Plot of Income vs. Unemployment Rate by County",
+       x = "Unemployment Rate (%)",
+       y = "Median Household Income (USD)",
+       caption = "Source: Social Determinants of Health Database") + 
+  theme_minimal() + 
+   theme(
+    panel.background = element_rect(fill = "white", color = NA), 
+    plot.title = element_text(hjust = 0.5, face = "bold"), 
+    axis.line = element_line(color = "black"), 
+    axis.ticks = element_line(color = "black")
+  )
+
+```
+This graph provides insights into the distribution of county-level median household incomes and unemployment rates across U.S. counties. Most counties have median household incomes between 30,000 and 75,000, while the general unemployment rate ranges from 2.5% to 7%.
+Additionally, the graph suggests a rough relationship between household income and unemployment rates. Generally, counties with higher median incomes tend to have lower unemployment rates, which aligns with the expectation that areas with fewer unemployed individuals tend to have better income levels. However, this relationship is not very strong, as indicated by the small negative slope in the graph.
+
+
+
+```{r}
+
+# Create bins for median age (e.g., bins of 5-year intervals)
+df_binned <- df_2020 |>
+  filter(!is.na(age)) |>
+  mutate(
+    age_bin = 
+      cut(age, 
+          breaks = seq(min(age), max(age), by = 2), 
+          include.lowest = TRUE)) |>
+  group_by(age_bin) |>
+  # Calculate mean income per bin
+  summarize(mean_income = mean(inc, na.rm = TRUE),
+            median_age = mean(age, na.rm = TRUE))
+
+# Create the line chart using the binned data
+ggplot(data = df_binned, aes(x = median_age, y = mean_income, group = 1)) +
+  geom_line(color = "dodgerblue4", size = 1) +
+  geom_point(color = "azure4", size = 2) +
+  labs(
+    title = "Relationship between Median Age and Median Income by County",
+    subtitle = "Average household income across U.S. counties, grouped by binned median age intervals.",
+    x = "Age",
+    y = "Mean Median Household Income (USD)",
+    caption = "Source: Social Determinants of Health Database"
+  ) +
+  theme_minimal() +  
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.text.x = element_text(hjust = 0.5),
+    axis.text.y = element_text(hjust = 0.5)
+  )
+
+
+```
