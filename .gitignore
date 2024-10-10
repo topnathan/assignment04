@@ -48,6 +48,5 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 
-# Add the data file for assignment 04 to be ignored
-/Users/suyux/Desktop/R/GU/data-science/assignment/assignment04/data/SDOH_2020_COUNTY_1_0.xlsx
-
+# Ignore specific data files in the data folder
+data/SDOH_2020_COUNTY_1_0.xlsx
