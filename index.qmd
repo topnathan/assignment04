@@ -1,12 +1,12 @@
 ---
 title: "Analysis of Median Income and Age by County"
 author: 
-  - "Your Name"
-  - "Partner's Name"
+  - "Yuxiang Su"
+  - "Yundi Hou"
 format: html 
 execute:
-  warning: false  # Hide warnings
-  message: false  # Hide unnecessary messages
+  warning: false  
+  message: false  
 ---
 
 ## Data Cleaning
