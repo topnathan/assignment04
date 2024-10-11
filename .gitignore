@@ -49,4 +49,4 @@ po/*~
 rsconnect/
 
 # Ignore specific data files in the data folder
-data/SDOH_2020_COUNTY_1_0.xlsx
+SDOH_2020_COUNTY_1_0.xlsx
