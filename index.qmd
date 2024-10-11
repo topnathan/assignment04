@@ -6,7 +6,8 @@ author:
 format: html 
 execute:
   warning: false  
-  message: false  
+  message: false 
+embed-resources: true  
 ---
 
 ## Policy Question
