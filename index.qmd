@@ -16,7 +16,7 @@ Therefore, our policy question is on the median household income among different
 
 ## Data Cleaning
 
-The data come from SDOH, Social Determinants of Health Database. We selected and renamed the main variables from the original data base.
+The data come from SDOH, [Social Determinants of Health Database](https://www.ahrq.gov/sdoh/data-analytics/sdoh-data.html). We selected and renamed the main variables from the original data base.
 
 ```{r}
 
@@ -25,8 +25,6 @@ library(tidyverse)
 library(ggplot2)
 library(sf)
 library(tigris)
-library(gridExtra)
-
 
 # Load in the data
 df_2020 <- read_excel("SDOH_2020_COUNTY_1_0.xlsx", sheet = 2)
