@@ -1,12 +1,12 @@
 ---
 title: "Analysis of Median Income and Age by County"
 author: 
-  - "Your Name"
-  - "Partner's Name"
+  - "Yuxiang Su"
+  - "Yundi Hou"
 format: html 
 execute:
-  warning: false  # Hide warnings
-  message: false  # Hide unnecessary messages
+  warning: false  
+  message: false  
 ---
 
 ## Data Cleaning
@@ -39,7 +39,7 @@ df_2020 <- df_2020 |>
 
 ```
 
-## Geographic Distribution of Median Income by County in 2009 and 2020
+## Geographic Distribution of Median Income by County in 2020
 
 ```{r}
 
@@ -153,6 +153,46 @@ ggplot(data = df_2020) +
   )
 
 ```
+
+## Relationship Between Age and Income
+
+```{r}
+
+# Create bins for median age (e.g., bins of 5-year intervals)
+df_binned <- df_2020 |>
+  filter(!is.na(age)) |>
+  mutate(
+    age_bin = 
+      cut(age, 
+          breaks = seq(min(age), max(age), by = 2), 
+          include.lowest = TRUE)) |>
+  group_by(age_bin) |>
+  # Calculate mean income per bin
+  summarize(mean_income = mean(inc, na.rm = TRUE),
+            median_age = mean(age, na.rm = TRUE))
+
+# Create the line chart using the binned data
+ggplot(data = df_binned, aes(x = median_age, y = mean_income, group = 1)) +
+  geom_line(color = "dodgerblue4", size = 1) +
+  geom_point(color = "azure4", size = 2) +
+  labs(
+    title = "Relationship between Median Age and Median Income by County",
+    subtitle = "Average household income across U.S. counties, grouped by binned median age intervals.",
+    x = "Median Age",
+    y = "Mean Median Household Income (USD)",
+    caption = "Source: Social Determinants of Health Database"
+  ) +
+  theme_minimal() +  
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.text.x = element_text(hjust = 0.5),
+    axis.text.y = element_text(hjust = 0.5)
+  )
+
+
+```
+
+
 
 
 
