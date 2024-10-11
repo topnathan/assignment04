@@ -1,26 +1,90 @@
 ---
-title: "index"
-format: html
-editor: visual
+title: "Analysis of Median Income and Age by County"
+author: 
+  - "Your Name"
+  - "Partner's Name"
+format: html 
+execute:
+  warning: false  # Hide warnings
+  message: false  # Hide unnecessary messages
 ---
 
-## Quarto
+## Data Cleaning
 
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+Before visualize the data, we have to combine the datasets of each year and then drop the unnecessary variables.
 
 ```{r}
-1 + 1
+
+library(readxl)
+library(tidyverse)
+library(ggplot2)
+library(sf)
+library(tigris)
+library(gridExtra)
+
+
+# Load in the data
+df_2020 <- read_excel("SDOH_2020_COUNTY_1_0.xlsx", sheet = 2)
+
+# Drop the unnecessary variables
+df_2020 <- df_2020 |>
+  rename(county_fips = COUNTYFIPS,
+         state_fips = STATEFIPS,
+         urindex = AHRF_USDA_RUCC_2013, 
+         inc = ACS_MEDIAN_HH_INC, 
+         uer = AHRF_UNEMPLOYED_RATE, 
+         age = ACS_MEDIAN_AGE
+         ) |>
+  select(county_fips, state_fips, urindex, inc, uer, age)
+
 ```
 
-You can add options to executable code like this
+## Geographic Distribution of Median Income by County in 2009 and 2020
 
 ```{r}
-#| echo: false
-2 * 2
+
+# Get the county shape data
+counties <- counties(cb = TRUE, resolution = "20m")
+
+# Merge the county shapefile data with df_2020 using FIPS code
+df_2020_sf <- counties |>
+  left_join(df_2020, by = c("GEOID" = "county_fips"))
+
+df_2020_sf <- st_transform(df_2020_sf, 4326)
+
+# Create a map of median income by county in 2020
+map_inc <-
+  ggplot(data = df_2020_sf) +
+  geom_sf(
+    aes(fill = inc), 
+    color = "white",
+    size = 0.1) + 
+  scale_fill_gradient(
+    low = "azure2", 
+    high = "dodgerblue4", 
+    name = "Median Income", 
+    na.value = "white") +
+  labs(title = "Median Household Income by County in the U.S. (2020)",
+       subtitle = "Median household income (dollars, inflation-adjusted to data file year)",
+       caption = "Source: Social Determinants of Health Database") + 
+  theme_minimal() +  
+  theme(
+    axis.text = element_blank(), 
+    axis.ticks = element_blank(),  
+    panel.grid = element_blank(),  
+    plot.title = element_text(hjust = 0.5, face = "bold"), 
+    plot.subtitle = element_text(hjust = 0.5, face = "italic")) +
+  coord_sf(xlim = c(-125, -66), ylim = c(24, 50)) 
+
+# Print the maps
+map_inc
+
+
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+
+
+
+
+
+
