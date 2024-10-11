@@ -129,6 +129,30 @@ bar_inc_ur <-
 bar_inc_ur
 ```
 
+## Relationship Between Income and Unemployment Rate
+
+```{r}
+
+# Create a scatter plot showing relationship between inc and uer
+ggplot(data = df_2020) + 
+  geom_point(
+    aes(x = uer, y = inc), 
+    alpha = 0.5, 
+    size = 0.5, 
+    color = "dodgerblue4") +
+  labs(title = "Scatter Plot of Income vs. Unemployment Rate by County",
+       x = "Unemployment Rate (%)",
+       y = "Median Household Income (USD)",
+       caption = "Source: Social Determinants of Health Database") + 
+  theme_minimal() + 
+   theme(
+    panel.background = element_rect(fill = "white", color = NA), 
+    plot.title = element_text(hjust = 0.5, face = "bold"), 
+    axis.line = element_line(color = "black"), 
+    axis.ticks = element_line(color = "black")
+  )
+
+```
 
 
 
